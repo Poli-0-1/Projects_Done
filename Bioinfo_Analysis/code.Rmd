@@ -1,0 +1,623 @@
+---
+title: "Bioinformatics Resources: Introduction to R"
+output: html_document
+date: "29/02/2024"
+---
+
+
+## R as calculator
+
+R can be used as a simple calculator. 
+
+We can perform standard arithmetic
+
+```{r, eval = TRUE}
+1+2
+2*(3*4)
+2^(3.5)
+5%%2
+```
+
+We can apply embedded functions for the calculation of logarithms, exponential, square root, etc ... 
+
+```{r, eval = TRUE}
+log2(32)
+2^6+log10(45)
+sqrt(2)*(log(45)+exp(2))
+```
+
+## Characters
+
+A character is used to represent string values
+
+```{r, eval = TRUE}
+"Hello world"
+```
+
+Specific functions can be used to convert other data types into characters or to check the type of data in use
+
+```{r, eval = TRUE}
+as.character(4.15)    
+class(as.character(4.15))
+class(4.15)
+```
+
+R provides functions to paste together different strings, using specific separators
+
+```{r, eval = TRUE}
+paste("Joe","Smith") 
+paste("Joe","Smith",sep="-")
+```
+
+to extract or substitute specific sub-strings from larger strings
+
+```{r, eval = TRUE}
+substr("Mary has a little lamb.", start=3, stop=12)
+sub("little", "big", "Mary has a little lamb.")
+```
+
+to search for specific patterns into strings
+
+```{r, eval = TRUE}
+grep("a","abaabbb")
+grep("a","bbbb")
+```
+
+## Logicals
+
+Logical operators can be used to build logical expressions.
+Expression can be defined from primitive or (see later) structured data types
+
+```{r, eval = TRUE}
+!(1<2)||(2>1)&&(3!=3)||(4!=4)
+!sub("-"," ","A-B-C")!=gsub("-"," ","A-B-C")
+substr("1+1",3,3)==(7-6)
+```
+
+Logical operators have specific precedences that should be considered when we evaluate logical expressions
+
+```{r, eval = TRUE}
+TRUE||TRUE&&FALSE
+FALSE&&TRUE||TRUE
+```
+
+## Variables
+
+A variable is a symbolic name used to represent information. Usually a variable name represents what information the variable contains. They are called variables because the represented information can change.
+
+Variables assignment is performed with operator `<-`
+
+```{r, eval = TRUE}
+a <- 49
+a <- "The dog ate my homework"
+```
+
+Variables can be used to perform calculation and can be input to functions
+
+```{r, eval = TRUE}
+a <- 48
+a <- a+1
+sqrt(a)
+
+a <- "The dog ate my homework"
+sub("dog","cat",a)
+
+a <- 2
+(a==3)
+```
+
+## Functions
+
+Functions do things with data.The input of a function are the arguments (0,1,2,…) and the ourput of a function is the result (exactly one)
+A specific keyword `function` is used with R to define functions
+
+```{r, eval = TRUE}
+add <- function(a,b) 
+{
+   result <- a+b
+   return(result)
+}
+add(1,2)
+```
+
+## Vectors
+
+Vectors are ordered collections of data of the same type. They are defined using a specific function `c()` which concatenates the values in input creating the vector.
+
+```{r, eval = TRUE}
+a <- c(1,2,3)
+c(a,a)
+```
+
+vectors can be used transparently in computations 
+
+```{r, eval = TRUE}
+a*2
+c(a,a*2)
+```
+
+In R, a single value is the special case of a vector with 1 element
+
+```{r, eval = TRUE}
+1
+```
+
+the type of a vector can be retrieved with the function `typeof()`
+
+```{r, eval = TRUE}
+x <- c(1, 5, 4, 9, 0)
+typeof(x)
+```
+
+and the function `length()` return the size of the vectors
+
+```{r, eval = TRUE}
+x <- c(1, 5, 4, 9, 0)
+length(x)
+```
+
+When creating a vector with different data types, the vector is coerced to the most general data type
+
+```{r, eval = TRUE}
+x <- c(1, 5.4, TRUE, "hello")
+x
+typeof(x)
+```
+
+Different approaches can be used to create vectors
+
+```{r, eval = TRUE}
+x <- 1:7
+x
+y <- 2:-2
+y
+x <- seq(1, 3, by=0.2) 
+x
+x <- seq(1, 5, length.out=4)
+x
+```
+
+Vectors can be used in arithmetic expressions
+
+```{r, eval = TRUE}
+v1 <- c(3,8,4,5,0,11)
+v2 <- c(4,11,0,8,1,2)
+v3 <- v1+v2
+print(v3)
+v3 <- v1*v2
+print(v3)
+```
+
+and can be compared using logical expressions that automatically evaluate the expression across all vector's values
+
+```{r, eval = TRUE}
+x <- c(1.3,2.6,2.4,1.9,2)
+all(x>2)
+any(x>2)
+which(x>2&x<4)
+```
+
+Many embedded functions are available for vectors
+
+```{r, eval = TRUE}
+x <- c(1.3,2.6,2.4,1.9,2)
+sort(x)
+rev(x)
+rep(x,2)
+union(x,x+1)
+unique(c(x,x))
+```
+
+Vectors can be used in operatiorns involving integer or double values, strings and logical values
+
+```{r, eval = TRUE}
+paste(c("A","B"),"C")
+paste(c("A","B"),c("C","D"))
+paste(c("A","B"),c("C","D"),c("E","F"),sep="-")
+c(TRUE,FALSE)|c(TRUE,TRUE)
+```
+
+## Matrices
+
+A matrix is a rectangular table of data of the same type.
+A matrix can be created in different ways using the function `matrix()`
+
+```{r, eval = TRUE}
+matrix(1:9, nrow = 3, ncol = 3)
+matrix(1:9, nrow = 3, byrow=TRUE)
+```
+
+and basic functions are available to inspect its attributes and characteristics
+
+```{r, eval = TRUE}
+a <- matrix(1:9, nrow = 3, ncol = 3)
+class(a)
+attributes(a)
+dim(a)
+```
+
+Names of rows and columns can be specified at creation or can be modified later
+
+```{r, eval = TRUE}
+x <- matrix(1:9, nrow = 3, dimnames = list(c("X","Y","Z"), c("A","B","C")))
+x
+colnames(x) = c("C1","C2","C3")
+rownames(x) = c("R1","R2","R3")
+x
+```
+
+Other approaches to create or modify a matrix are by concatenating rows and columns 
+
+```{r, eval = TRUE}
+cbind(c(1,2,3),c(4,5,6))
+rbind(c(1,2,3),c(4,5,6))
+```
+
+Numeric matrices and vectors can be used in arithmetics
+
+```{r, eval = TRUE}
+m <- cbind(c(1,2,3),c(1,2,3),c(1,2,3))
+v <- c(2,4,6)
+m*2
+m*v
+m*m
+```
+
+where howevere special operators are used to perform matrix multiplication
+
+```{r, eval = TRUE}
+m <- cbind(c(1,2,3),c(1,2,3),c(1,2,3))
+v <- c(2,4,6)
+m%*%v
+m%*%m
+```
+
+## Lists
+
+Lists are ordered collection of data of arbitrary types.
+A list is created with the function `list`
+
+```{r, eval = TRUE}
+doe <- list("john",28,F)
+doe
+doe <- list(name="john",age=28,married=F)
+doe
+```
+
+A list can be transformed into a vector using the function `unlist()` that will coerce the values to the most general data type
+
+```{r, eval = TRUE}
+unlist(doe)
+class(unlist(doe))
+class(doe)
+```
+
+## Dataframe
+
+Represent the typical data table that researchers come up with – like a spreadsheet. It is a rectangular table with rows and columns. Data within each column has the same type (e.g. number, text, logical), but different columns may have different types
+
+```{r, eval = TRUE}
+d <- data.frame(n1=c(3,2,1), n2=c("A","B","C"), n3=c(TRUE,TRUE,FALSE))
+d
+class(d)
+typeof(d)
+```
+
+
+## Subsetting
+
+Individual elements of a vector, matrix or data frame are accessed with `[ ]` by specifying their index, or their name
+
+```{r, eval = TRUE}
+d <- data.frame(n1=c(3,2,1), n2=c("A","B","C"), n3=c(TRUE,TRUE,FALSE))
+d
+d[3,2]
+d["1","n2"]
+d[,"n2"]
+d[,"n2",drop=FALSE]
+d["1",]  
+d["1",,drop=FALSE]  
+```
+
+The parameter `drop=FALSE` is used to keep the data.frame when a single column is selected. If not specified the column is converted into a vector. For data.frames `drop=FALSE` is used only for columns, while for matrices it should be used both for rows and columns
+
+```{r, eval = TRUE}
+m <- cbind(c(1,2,3),c(1,2,3),c(1,2,3))
+m[1,]
+m[1,,drop=FALSE]
+m[,1]
+m[,1,drop=FALSE]
+```
+
+Complex subsetting can be implemented using vectors or evalation of logical expression thourgh the function `which()`
+
+```{r, eval = TRUE}
+m <- cbind(c(1,2,3),c(1,2,3),c(1,2,3))
+m[1:2,c(1,3)]
+m[which(m[,1]>1),]
+```
+
+Subsetting can be used also to change the content
+
+```{r, eval = TRUE}
+d <- data.frame(n1=c(3,2,1), n2=c("A","B","C"), n3=c(TRUE,TRUE,FALSE))
+d
+d[1,1] <- 5 
+d
+d["1","n1"] <- 6
+d
+d[1,] <- c(5,"D",FALSE)
+d
+```
+
+For subsetting lists, the use of `[]` and `[[]]` have slightly different effects
+
+```{r, eval = TRUE}
+doe <- list(name="john",age=28,married=F)
+doe[[1]]
+doe[1]
+doe[1] = "frank"
+doe
+doe[[1]] = "mark"
+doe
+```
+
+Subsetting in lists can be performed using value names
+
+```{r, eval = TRUE}
+doe <- list(name="john",age=28,married=F)
+doe$name
+doe$name = "frank"
+doe
+```
+
+## Branching
+
+Branching is done with the `if` statement
+
+```{r, eval = TRUE}
+x <- c(1,2,3)
+if (any(x>2))
+{
+  x <- x+1
+}
+x
+```
+
+with the `else` branch when needed
+
+```{r, eval = TRUE}
+x <- c(1,2,3)
+if (any(x>3))
+{
+  x <- x+1
+} else 
+{
+  x <- x+2
+}
+x
+```
+
+## Loops
+
+When the same or similar tasks need to be performed multiple times: for all elements of a list, for all columns of a matrix, ..., loops are used
+
+One way is through the `for` statement
+
+```{r, eval = TRUE}
+for(i in 1:10)
+{
+  print(i*i)
+}
+
+for(i in 1:3)
+{
+  print(m[i,]*i)
+}
+```
+
+or the `while` statement
+
+```{r, eval = TRUE}
+i<-1
+while(i<=5)
+{
+  print(i*i)
+  i <- i+sqrt(i)
+}
+```
+
+When the same or similar tasks need to be performed multiple times for all elements of a list, or a vector, or for all columns of a matrix or data.frame a class of specific functions can be used.
+
+The `apply` function applies a function along some dimensions of a matrix, according to margin, and return a vector of the appropriate size
+
+```{r, eval = TRUE}
+x <- c(1:12)
+dim(x) <- c(4,3)
+x
+apply(x,1,sum)
+apply(x,2,sum)
+```
+
+The `lapply` function instead applies a given function to every element of a list and obtain a list as a result.
+
+```{r, eval = TRUE}
+li <- list("klaus","martin","georg")
+lapply(li, toupper)
+```
+
+The `sapply` function is similar to `lapply`, but it tries to simplify the output to the most elementary data structure that is possible. It s a wrapper function for `lapply`.
+
+```{r, eval = TRUE}
+li <- list("klaus","martin","georg")
+sapply(li, toupper)
+fct <- function(x) { return(c(x, x*x, x*x*x)) }
+sapply(1:5, fct)
+```
+
+## IO data
+
+There are many ways to get data into R and out of R. Most programs (e.g. Excel), as well as humans, know how to deal with rectangular tables in the form of tab-delimited text files
+
+```{r, eval = TRUE}
+table <- read.delim("Table.txt")
+table
+table <- read.table("Table.txt")
+table
+table <- read.table("Table.txt",header=T)
+table
+table <- read.csv("Table.txt")
+table
+table <- read.csv("Table.txt",sep="\t")
+table
+```
+
+Files can be read also by lines and split them with function `split`
+
+```{r, eval = TRUE}
+lines <- readLines("Table.txt")
+lines
+lines = readLines("Table.txt",n=2)
+lines
+strsplit(lines[1],"\t")
+```
+
+Data can be written to a file with functions `write.table` or `write.lines`
+
+```{r, eval = TRUE}
+table <- read.delim("Table.txt")
+table
+write.table(table,"Table_new.txt",sep="\t",col.names=T,row.names=F,quote=F)
+x <- c("Hello","world")
+writeLines(x,"Test_1.txt")
+writeLines(x,"Test_2.txt",sep = " ")
+```
+
+## Store data
+
+Every R object can be stored into and restored from a file with the commands “save” and “load”. This uses the XDR (external data representation) standard of Sun Microsystems and others, and is portable between MS-Windows, Unix, Mac.
+
+```{r, eval = TRUE}
+x <- c("Hello","world")
+save(x,file="x.Rdata")
+load("x.Rdata")
+```
+
+## Plotting
+
+The most used plotting function in R programming is the plot() function. It is a generic function, meaning, it has many methods which are called according to the type of object passed to `plot()`
+
+```{r, eval = TRUE}
+x <- seq(-pi,pi,0.1)
+plot(x, sin(x))
+plot(x, sin(x),main="The Sine Function", ylab="sin(x)")
+plot(x, sin(x),main="The Sine Function",ylab="sin(x)", type="l", col="blue")
+```
+
+Different basic functions can be used to plot data. There is the function `barplot`, that plots values as bars
+
+```{r, eval = TRUE}
+x <- c(1,3,5,7,10,4,1)
+barplot(x)
+barplot(x,xlab="elems",ylab="value",col="blue")
+```
+
+The function `boxplot` instead plots the characteristics of values distributions providing a summary of data variabiliy
+
+```{r, eval = TRUE}
+x <- c(1,3,5,7,10,4,1)
+y <- c(1,3,5,7,10,4,1)+3
+boxplot(x,y)
+boxplot(x,y,names=c("A","B"), ylab="value", xlab="elems",col=c("blue","orange"))
+```
+
+Scatterplots allows to plot vectors of data of the same length against each other
+
+```{r, eval = TRUE}
+x <- c(10,22,38,45,65,78,100,40,10)
+y <- c(15,28,30,53,60,71,120,34,1)
+plot(x,y)
+plot(x,y,xlab="Variable A",ylab="Variable B", main="Comparison A and B variables",pch=19, col="darkgray")
+```
+
+## Tidiverse
+
+Install the package `install.packages("tidyverse")` (only once) and load the package with
+
+```{r setup}
+library(tidyverse)
+```
+Reading data
+
+```{r, eval = TRUE}
+read_delim("GeneModel.txt") -> table
+table
+```
+
+Use function `select()` to pick columns
+
+```{r, eval = TRUE}
+table <- read_delim("GeneModel.txt")
+select(table,ensembl_gene_id,external_gene_name,gene_biotype)
+select(table,ensembl_gene_id,1,2,3)
+
+filter(table, gene_biotype=="protein_coding")
+```
+
+Combining operations using pipe
+
+```{r, eval = TRUE}
+read_delim("GeneModel.txt") -> table
+table %>% 
+  filter(gene_biotype=="protein_coding") %>%
+  filter(start_position>28928144) %>%
+  select(ensembl_gene_id,gene_biotype,start_position,end_position)
+```
+
+Plotting with ``ggplot`
+
+```{r, eval = TRUE}
+read_delim("GeneModel.txt") -> table
+table <- table[1:10,]
+table %>%
+  ggplot(aes(x=start_position, y=(end_position-start_position))) + 
+  geom_col(fill="red2") +
+  ggtitle("Genes length") +
+  ylab("bp")
+```
+
+## Basic stats in R
+
+Qualitative data
+
+```{r, eval = TRUE}
+library(MASS)
+head(painters)
+table(painters$School)
+pie(table(painters$School)) 
+```
+
+Quantitative data
+
+```{r, eval = TRUE}
+library(MASS)
+duration <- faithful$eruptions 
+head(duration,n=3)
+breaks <- seq(1.5, 5.5, by=0.5) 
+duration.cut <- cut(duration, breaks, right=FALSE)
+head(duration.cut,n=3)
+duration.freq <- table(duration.cut)
+cum.freq0 <- c(0, cumsum(duration.freq)) 
+plot(breaks, cum.freq0, main="Old Faithful Eruptions", xlab="Duration minutes", ylab="Cumulative eruptions") 
+lines(breaks, cum.freq0)
+
+plot(faithful$eruptions, faithful$waiting, xlab="Eruption duration", ylab="Time waited")
+cor.test(faithful$eruptions, faithful$waiting)
+
+linearMod <- lm(eruptions ~ waiting, data=faithful)
+print(linearMod)
+summary(linearMod)
+waiting <- 70
+coeff  <- as.numeric(linearMod$coefficients)
+coeff[1]+coeff[2]*waiting
+```
