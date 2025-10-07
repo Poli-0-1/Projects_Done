@@ -1,0 +1,550 @@
+---
+title: "Policano_Andrea"
+output: html_document
+date: "2024-03-12"
+---
+
+```{r 0. Libraries used}
+suppressPackageStartupMessages(library(GEOquery))
+suppressPackageStartupMessages(library(ggfortify))
+suppressPackageStartupMessages(library(useful))
+suppressPackageStartupMessages(library(cluster))
+suppressPackageStartupMessages(library(RColorBrewer))
+suppressPackageStartupMessages(library(pheatmap))
+suppressPackageStartupMessages(library(dendextend))
+suppressPackageStartupMessages(library(genefilter))
+suppressPackageStartupMessages(library(MASS))
+suppressPackageStartupMessages(library(caret))
+suppressPackageStartupMessages(library(pROC))
+suppressPackageStartupMessages(library(glmnet))
+suppressPackageStartupMessages(library(gprofiler2))
+suppressPackageStartupMessages(library(igraph))
+suppressPackageStartupMessages(library(rScudo))
+suppressPackageStartupMessages(library(illuminaHumanv4.db))
+suppressPackageStartupMessages(library(pathfindR))
+suppressPackageStartupMessages(library(pathfindR.data))
+suppressPackageStartupMessages(library(biomaRt))
+suppressPackageStartupMessages(library(limma))
+suppressPackageStartupMessages(library(annotate))
+suppressPackageStartupMessages(library(org.Hs.eg.db))
+suppressPackageStartupMessages(library(illuminaHumanv3.db))
+suppressPackageStartupMessages(library(ROCR))
+suppressPackageStartupMessages(library(factoextra))
+suppressPackageStartupMessages(library(randomForest))
+suppressPackageStartupMessages(library(enrichR))
+suppressPackageStartupMessages(library(reprtree))
+suppressPackageStartupMessages(library(clusterProfiler))
+```
+
+
+```{r 1. Retrieval of metadata and Expr. Matrix}
+setwd("C:/Users/User/Desktop/Università_Trento/Net Based Analysis")
+
+gse <- getGEO("GSE52060")
+metadata <- gse[[1]]
+metadata_df <- pData(phenoData(gse[[1]]))
+View(metadata_df)
+df <- exprs(metadata)
+df_1 <- log2(df)
+
+
+boxplot(df)
+boxplot(df_1)
+```
+
+```{r 2. PCA}
+pca_df <- prcomp(t(df_1), scale = F)
+
+summary(pca_df)
+screeplot(pca_df)
+
+
+PCA_mk1 <- autoplot(pca_df)
+PCA <- autoplot(pca_df, data = metadata_df , colour = "source_name_ch1")
+PCA_mk2 <- autoplot(pca_df, data = metadata_df , colour = "source_name_ch1", label = T, label.size = 3)
+PCA_mk3 <- autoplot(pca_df, data = metadata_df , colour = "source_name_ch1", frame = T, frame.type = "norm")
+
+
+
+PCA_mk1
+PCA
+PCA_mk2
+PCA_mk3 
+```
+
+
+```{r 3. K-Clustering and Hierarchical}
+#####################           k-means clustering
+
+k <- 2
+
+clust_res <- kmeans(t(df_1), k)
+
+table(clust_res$cluster)
+Clustering_mk1 <- plot(clust_res, data = t(df_1)) 
+#+ geom_text(aes(label=colnames(df_1)),hjust=0,vjust=0)
+
+
+
+Clustering_mk2 <- fviz_cluster(clust_res, data = t(df_1),
+                               geom = "point",
+                               palette = c("#FF3333", "#0066CC"),
+                               ellipse.type = "convex", main = "K-means",
+                               legend.title = "Tissue Type")
+
+
+Clustering_mk2 <- Clustering_mk2 + scale_color_manual(
+  values = c("#FF3333", "#0066CC"), labels = c("Neoplastic", "Normal Mucosa"))
+
+Clustering_mk1
+Clustering_mk2
+#####################           Hierarchical clustering
+
+distance_mat <- dist(t(df_1))
+
+hier_clust_res <- hclust(distance_mat, method = "ave")
+plot(hier_clust_res)
+squads <- cutree(hier_clust_res, k = k)
+
+table(squads)
+
+plot(hier_clust_res, hang <- -1, labels = squads, xlab = "distance")
+
+tree <- rect.hclust(hier_clust_res, k = 2, border = "red")
+
+dendr_clust <- as.dendrogram(hier_clust_res)
+col_dendr_clust <- color_branches(dendr_clust, h = 145)
+plot(col_dendr_clust)
+```
+```{r 4. Random Forests}
+e.mat <- 2^df_1[, c(1:46)]
+
+new.eset_1 <- log2(na.omit(e.mat))
+dim(new.eset_1)
+
+conditions <- metadata_df$characteristics_ch1.2
+
+set.seed(1234)
+
+rf <- randomForest(x = t(new.eset_1), y = as.factor(conditions), ntree = 1000)
+
+predict(rf, t(new.eset_1))
+
+
+plot(sort(rf$importance, decreasing = T))
+varImpPlot(rf)
+
+mp_probes <- rownames(rf$importance)
+
+top150 <- mp_probes[order(rf$importance, decreasing = T) [1:150]]
+
+write.csv(top150, file = "top150_probes.txt", quote = FALSE, row.names = F, col.names = F)
+```
+
+
+```{r 5. Heatmap}
+distance_df_matrix <- as.matrix(distance_mat)
+
+color <- colorRampPalette(rev(brewer.pal(9, "RdPu")))(255)
+df_Heatmap <- pheatmap(distance_df_matrix, clustering_distance_rows = distance_mat,
+                       clustering_distance_cols = distance_mat, col = color)
+```
+```{r 6. Linear Discriminant Analysis (LDA)}
+
+#####################    Setting the Factors of the DF
+
+conditions <- metadata_df$characteristics_ch1.2
+
+conditions_factored <- factor(conditions)
+
+ttests_factors <- rowttests(df_1, conditions_factored)
+to_keep <- which(ttests_factors$p.value < 0.01)
+
+new_df <- df_1[to_keep, ]
+t_new_df <- t(new_df)
+
+
+new_df_1 <- cbind(as.data.frame(t_new_df), conditions_factored)
+
+colnames(new_df_1)[ncol(new_df_1)] <- "AFFECTED"
+
+
+
+n_norm_mucosa <- 23
+n_neoplastic <- 23
+
+##################### Model Training
+train <- sample(1:(n_norm_mucosa), (n_norm_mucosa-8))       # 81% of total control samples
+test <- setdiff(1:(n_norm_mucosa), train)
+
+test <- c(test, test+23)
+train <- c(train, train+23)
+
+
+LDA_mod <- lda(AFFECTED ~ ., data = new_df_1, prior = c(0.5, 0.5), subset = train)
+
+plot(LDA_mod)
+
+mod_values <- predict(LDA_mod, new_df_1[train, ])
+
+mod_values$class
+
+plot(mod_values$x[, 1], ylab = "LDA axis")
+
+predictions <- predict(LDA_mod, new_df_1[test, ])
+
+predictions$class
+
+table(as.numeric(predictions$class),
+      as.numeric(new_df_1[test, "AFFECTED"]))
+
+plot.roc(as.numeric(predictions$class), as.numeric(new_df_1[test, "AFFECTED"]))
+
+ROC_LDA <- plot.roc(as.numeric(predictions$class), as.numeric(new_df_1[test, "AFFECTED"]))
+
+
+##CARET methodology
+
+control <- trainControl(method = "cv", number = 10)
+metric <- "Accuracy"
+
+
+fit.lda <- train(AFFECTED ~., data = new_df_1, method = "lda", metric = metric, 
+                 trControl = control)
+
+
+fit.rf <- train(AFFECTED ~., data = new_df_1, method = "rf", metric = metric, 
+                 trControl = control)
+
+
+LDA_results <- resamples(list(LDA = fit.lda , RF = fit.rf))
+
+
+summary(LDA_results)
+ggplot(LDA_results) + labs( y = "Accuracy")
+
+#####repeat the CARET methodology repeating it 10 times
+
+control_10t <- trainControl(method = "cv", number = 10, repeats = 10)
+
+fit.lda10t <- train(AFFECTED ~., data = new_df_1, method = "lda", metric = metric,
+                     trControl = control_10t)
+
+fit.rf10t <- train(AFFECTED ~., data = new_df_1, method = "rf", metric = metric,
+                   trControl = control_10t)
+
+LDA_results_10t <- resamples(list(LDA = fit.lda10t, RF = fit.rf10t))
+
+summary(LDA_results_10t)
+ggplot(LDA_results_10t) +labs(y = "Accuracy")
+```
+
+
+```{r 7. Lasso/Ridge Regression}
+
+###LASSO ONLY
+
+conditions <- metadata_df$characteristics_ch1.2
+
+#conditions <- conditions[-c(25:46)]
+
+conditions_factored <- factor(conditions)
+
+fit_LASSO <- glmnet(new_df_1, conditions_factored, standardize = F, family = "binomial")
+plot(fit_LASSO, xvar = "lambda", label = T)
+
+
+
+new_df_1_2 <- new_df_1
+
+new_df_1_2 <- as.matrix(new_df_1_2)
+
+cfit_LASSO <- cv.glmnet(new_df_1_2, conditions_factored, standardize = F, family = "binomial")
+plot(cfit_LASSO)
+
+
+coef(cfit_LASSO, s=cfit_LASSO$lambda.min)
+
+
+train <- sample(1:(n_norm_mucosa), (n_norm_mucosa-5))
+test <- setdiff(1:(n_norm_mucosa),train)
+
+test<- c(test, test+15)
+train <- c(train, train+15)
+
+
+fit_LASSO_1 = glmnet(new_df_1_2[train,], conditions_factored[train], standardize=FALSE, family="binomial")
+
+plot(fit_LASSO_1)
+
+
+cfit_LASSO_1 = cv.glmnet(new_df_1_2[train,], conditions_factored[train], standardize=FALSE, family="binomial")
+
+plot(cfit_LASSO_1)
+
+
+predict(fit_LASSO_1, new_df_1_2[test, ], type="class", s= cfit_LASSO_1$lambda.min)
+
+
+pred2 <- predict(fit_LASSO_1, new_df_1_2[test, ], type="response", s = cfit_LASSO_1$lambda.min)
+
+plot(performance(prediction(pred2, conditions_factored[test]), 'tpr', 'fpr'))
+
+
+auc.tmp <- performance(prediction(pred2, conditions_factored[test]),"auc")
+auc <- as.numeric(auc.tmp@y.values)
+
+
+#LASSO + CARET
+
+remove(control)
+control <- trainControl(method = "cv", number = 10)
+
+fit_LASSO_caret <- train(AFFECTED ~. , data = new_df_1_2, method = "glmnet", family = "binomial", 
+                         tuneGrid = expand.grid(alpha = 1, lambda = seq(0,1, by = 0.05)),
+                         trControl = control, metric = metric)
+
+plot(fit_LASSO_caret)
+
+
+results <- resamples(list(RF = fit.rf, LDA = fit.lda, LASSO = fit_LASSO_caret))
+summary(results)
+
+ggplot(results) + labs("Accuracy")
+```
+
+```{r 8. RSCUDO}
+###RSCUDO ONLY
+
+conditions <- metadata_df$characteristics_ch1.2
+
+conditions_factored <- factor(conditions, labels = c("Control", "Affected"))
+
+set.seed(123)
+
+in_training <- createDataPartition(conditions_factored, list = F)
+
+dat <- df_1[, 1:46]
+train_dat <- dat[, in_training]
+test_dat <- dat[, -in_training]
+
+
+#analyze the training set
+training_res <- scudoTrain(train_dat, groups = conditions_factored[in_training],
+nTop = 25, nBottom = 25, alpha = 0.05)
+
+training_res
+
+
+#check of signatures
+upSignatures(training_res)
+consensusUpSignatures(training_res)
+
+
+trainNet <- scudoNetwork(training_res, N = 0.2)
+scudoPlot(trainNet, vertex.label = NA)
+
+testing_res <- scudoTest(training_res, test_dat, conditions_factored[-in_training], nTop = 25, nBottom = 25)
+
+testNet <- scudoNetwork(testing_res, N = 0.2)
+scudoPlot(testNet, vertex.label = NA)
+
+
+#cluster identification
+components <- igraph::components(testNet)
+subgraphs <- igraph::decompose.graph(testNet)
+
+
+testing_clust <- igraph::cluster_walktrap(testNet)
+plot(testing_clust, testNet, vertex.label = NA)
+
+
+#classification
+classification_res <- scudoClassify(train_dat, test_dat, N = 0.25,
+                                    nTop = 12,
+                                    nBottom = 12,
+                                    trainGroups = conditions_factored[in_training],
+                                    alpha = 0.5)
+
+caret::confusionMatrix(classification_res$predicted, conditions_factored[-in_training])
+
+SCUDO_model <- scudoModel(nTop = (2:6)*5, nBottom = (2:6)*5, N = 0.25)
+
+SCUDO_control <- caret::trainControl(method = "cv", number = 5,
+                                     summaryFunction = caret::multiClassSummary)
+
+cvRES <- caret::train(x = t(train_dat), conditions_factored[in_training],
+                      method = SCUDO_model, trControl = SCUDO_control)
+
+```
+
+
+
+```{r 9. Pathfinder}
+
+condition <- metadata_df$source_name_ch1
+
+design_1 <- model.matrix(~0 + condition)
+
+colnames(design_1) <- c("Colorectal_Cancer_patient_Neoplastic_Tissue", "Colorectal_Cancer_patient_Normal_Adjacent_Mucosa")
+
+#analysis with limma
+
+fit_1 <- lmFit(df, design_1)
+
+contrast.matrix <- makeContrasts(Diff = "Colorectal_Cancer_patient_Neoplastic_Tissue - Colorectal_Cancer_patient_Normal_Adjacent_Mucosa", levels = design_1)
+
+fit2 <- contrasts.fit(fit_1, contrast.matrix)
+fit2 <- eBayes(fit2)
+
+
+#results of the analysis
+results_limma <- topTable(fit2, adjust = "fdr", number = nrow(df))
+
+
+#obtain the gene symbol for the illumina probes
+genes_of_int <- row.names(results_limma)
+
+df_genes <- data.frame(Gene = unlist(mget(x = genes_of_int, envir = illuminaHumanv4SYMBOL)))
+
+df_genes <- select(illuminaHumanv4.db, 
+                   keys = genes_of_int, 
+                   columns=c("SYMBOL"),
+                   keytype="PROBEID")
+
+
+merged_df <- merge(results_limma, df_genes, by = "PROBEID")
+
+#filter those unwanted
+merged_df <- na.omit(merged_df)
+
+print(merged_df)
+
+merged_df_subset <- subset(merged_df, adj.P.Val < 0.05)
+#modify the df in order to mimic the pathfindR input file
+merged_df <- merged_df[, -c(1,3,4,5,7)]
+merged_df <- merged_df[, c(3,1,2)]
+colnames(merged_df)[1] <- "Gene.symbol"
+
+gene_list <- as.list(to_remember$SYMBOL)
+
+#produce a gene_list file for later and external use 
+setwd("C:/Users/User/Desktop/Università_Trento/Net Based Analysis")
+
+write.table(gene_list, file = "final_gene_list.txt", sep = "\n", row.names = F, col.names = F, quote = F)
+
+
+###############################################################
+
+#try to obtain the probe ids 
+
+
+#create with them a dataset having the gene symbols
+ensembl <-  useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+
+conditions <- metadata_df$characteristics_ch1.2
+
+conditions_factored <- factor(conditions, labels = c("Control", "Affected"))
+
+tt_ordered <- ttests_factors[order(ttests_factors$p.value),]
+
+probe_IDs <- rownames(tt_ordered)
+
+gene_symbols_list <- mapIds(illuminaHumanv3.db,
+                            keys = probe_IDs,
+                            column = "SYMBOL",
+                            keytype = "PROBEID")
+
+print(gene_symbols_list)
+
+gene_symbols_df <- data.frame(PROBEID = names(gene_symbols_list),
+                              SYMBOL = unlist(gene_symbols_list))
+
+GSE52060_merged <- merge(gene_symbols_df, tt_ordered,
+                         by.x = "PROBEID", by.y = "row.names")
+
+
+GSE52060_merged <- subset(GSE52060_merged, select = -c(PROBEID))
+
+
+network_KEGG <- run_pathfindR(GSE52060_merged[c("SYMBOL", "p.value")],
+                          iterations = 1, gene_sets = "KEGG", p_val_threshold = 0.01)
+
+
+network_KEGG_BP <- run_pathfindR(GSE52060_merged[c("SYMBOL", "p.value")],
+                          iterations = 1, gene_sets = "GO-BP", p_val_threshold = 0.01)
+
+
+network_KEGG_reactome <- run_pathfindR(GSE52060_merged[c("SYMBOL", "p.value")],
+                          iterations = 1, gene_sets = "Reactome", p_val_threshold = 0.01)
+
+
+
+enrichment_chart(result_df = network_KEGG,
+                 top_terms = 15)
+
+enrichment_chart(result_df = network_KEGG_BP,
+                 top_terms = 15)
+
+enrichment_chart(result_df = network_KEGG_reactome,
+                 top_terms = 15)
+
+###need to calculate the p-value and obtain a df with the gene symbol
+###and the p-value of each one, use the info coming from the t-test
+```
+
+
+```{r EnrichR}
+
+website_live <- getOption("enrichR.live")
+
+
+if (website_live){
+  listEnrichrSites()
+  setEnrichrSite("Enrichr")
+}
+
+
+if (website_live) dbs <- listEnrichrDbs()
+
+head(dbs)
+
+
+dbs <- c("GO_Molecular_Function_2023", "Human_phenotype_Ontology",
+         "Jensen_TISSUES", "Jensen_Diseases", "Orphanet_Augmented_2021",
+         "ClinVar_2019", "DisGeNet", "PheWeb_2019", "VirusMINT", "dbGaP",
+         "MAGMA_Drugs_and_Diseases", "GeDiPNet_2023", "Rare_Diseases_GeneRIF_Gene_Lists",
+         "Achilles_fitness_decrease", "Descartes_Cell_Types_and_Tissue_2021",
+         "CCLE_Proteomics_2020", "HuBMAP_ASCTplusB_augmented_2022",
+         "Cancer_Cell_Line_Encyclopedia")
+
+enriched_genes <- enrichr("lista di geni eventuali", dbs)
+
+
+sorted_gene_list <- to_remember[order(to_remember$p.value), ]
+
+sorted_gene_list <- sorted_gene_list[1 : 150, ]
+
+sorted_gene_list <- sorted_gene_list[, -c(2:4)]
+
+Protein_IDs <- bitr(sorted_gene_list, fromType="SYMBOL", toType="UNIPROT", OrgDb="org.Hs.eg.db") # returns 15 rows
+
+protein_list <- as.list(Protein_IDs$UNIPROT)
+
+#produce a gene_list file for later and external use 
+setwd("C:/Users/User/Desktop/Università_Trento/Net Based Analysis")
+
+write.table(protein_list, file = "final_protein_list.txt", sep = "\n", row.names = F, col.names = F, quote = F)
+
+```
+
+
+
+
+
+
+
+
+
+
+
