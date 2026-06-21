@@ -1,7 +1,6 @@
 ---
 title: "Bioinformatics Resources: Introduction to R"
 output: html_document
-date: "29/02/2024"
 ---
 
 
