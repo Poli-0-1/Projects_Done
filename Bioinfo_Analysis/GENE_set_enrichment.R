@@ -1,10 +1,5 @@
 #GENE-SET ENRICHMENT
 
-library()
-library()
-library()
-library()
-
 
 
 #take results from other codes: p-values, log-fold change 
