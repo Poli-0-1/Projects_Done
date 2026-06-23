@@ -70,7 +70,7 @@ Each repository holds one or multiple files related to a specific project for a 
 <br>
 
 
-4. **Know_Graph_Eng**
+5. **Know_Graph_Eng**
    - ***Aim*** --> Build a Knowledge Graph (KG) on the transmission dynamics of the human microbiome across different populations, while considering social relationships and environmental contexts following the **iTelos** methodology. The KG organizes data on gut/oral bacterial species (SGBs), their phenotypic traits, transmission rates, and the individuals from which samples were collected, enabling structured queries for researchers, clinicians, and students in the microbiology field.
    - ***Files***:
      - `KGE_PROJECT-Phase IV.pdf` → Full project report documenting all four phases of the KGE pipeline: Purpose Definition (informal purpose, domain of interest, scenarios, personas, competency questions, ER model), Information Gathering (data sources, cleaning, standardization, finalized `.tsv` datasets), Language Definition (concept identification via UKC, D3O, GENO, OHMI ontologies; language resource table), and Knowledge Definition (ER/EER formalization, Teleontology creation and alignment via Protégé, finalized Teleology exported as `.rdf`).
@@ -84,6 +84,23 @@ Each repository holds one or multiple files related to a specific project for a 
   
 <br>
 <br>
+
+
+
+6. **Mat_Net_Modelling**
+   - ***Aim*** --> Study and apply simulation algorithms (ODE/SDE models, Bayesian estimation, gradient-based optimization) to model the pharmacokinetics of Levodopa in Parkinson's Disease patients, with the objective of estimating bioavailability and system noise parameters, and evaluating model performance via cross-validation. Based on the work of Maccarrone et al. (2024).
+   - ***Files***:
+     - `project/` → Python implementation of the full pharmacokinetic pipeline: ODE and SDE model definition, fixed parameter setup (theory-based allometry for individual random effects), parameter estimation (MLE in two steps: bioavailability then system noise σ), cross-validation (within-patient occasion-based and leave-one-out), Bayesian estimation via Metropolis-Hastings, gradient-based optimization (Line Search with Quasi-Newton direction, Trust Region method), and bioavailability evaluation via AUC comparison. Extensions include LOOCV and multi-administration scenario modelling (oral, inhale, infusion).
+     - `Parkinsons_and_simulation_models.pptx` → Project presentation summarizing the biological background, mathematical models, estimation methodology, limitations (small dataset, MLE bias), and proposed extensions.
+   - ***Outputs*** → ODE/SDE model fits, parameter estimation results (bioavailability, σ), cross-validation scores, Metropolis-Hastings trace plots, gradient-based optimization convergence plots, AUC comparison against Robertson's reference study.
+   - ***Languages*** → Python, Matlab.
+   - ***Resources/Libraries*** → `numpy`, `scipy` (ODE solver, optimization), `matplotlib`, `pandas`.
+   - ***Authors*** → Andrea Policano, Huyen Pham.
+
+
+<br>
+<br>
+
 
 
 ## Future Improvements ⏭️
