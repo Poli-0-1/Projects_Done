@@ -51,8 +51,39 @@ Each repository holds one or multiple files related to a specific project for a 
    - ***Outputs*** → Alignment scoring and traceack matrices alongside the optimally aligned sequence, highest score, longest strak of consecutive matches, sequences with 60% (or more) score, sequences presenting only 3-consecutive matches.
    - ***Languages*** → Python.
    - ***Resources/Packages*** → `pandas`, `enum`, `numpy`.
+  
+<br>
+<br>
 
 
+4. **Net_based_analysis**
+   - ***Aim*** --> Comparing and assessing different clustering and classification methodologies on a Colorectal Cancer (CRC) gene expression dataset (GEO: **GSE52060**, 46 samples — 23 Normal Mucosa / 23 Neoplastic Tissue). The objective here is also to evaluate their ability to correctly replicate the biological subdivision of the samples and extracting enrichment insights from the resulting significant (p_value < 0.05) gene lists.
+   - ***Files***:
+     - `project.Rmd` → Full analysis pipeline in RStudio covering: expression matrix retrieval and log2 normalization, PCA, K-Means and Hierarchical Clustering (with dendrogram production), Heatmap (distance matrix-based), Random Forest, Linear Discriminant Analysis (LDA) with ROC/AUC evaluation, CARET cross-validation (10-fold, LDA vs RF comparison), LASSO regression, RSCUDO network-based clustering, pathfindR enrichment (KEGG, GO-BP, Reactome databases), manual enrichment via EnrichR, and STRINGdb protein network analysis on the top 150 filtered genes.
+   - ***Outputs*** → Boxplots (pre- and post-normalization), PCA plots, K-means cluster plots, dendrograms (Hierarchical Clustering), Heatmap (distance matrix), RF importance plots, LDA classification plots, ROC curve (AUC = 0.88), LASSO regularization plots, RSCUDO network graphs, pathfindR enrichment plots, STRINGdb protein interaction network.
+   - ***Languages*** → R.
+   - ***Resources/Packages*** → `GEOquery`, `limma`, `pheatmap`, `RColorBrewer`, `randomForest`, `MASS`, `caret`, `pROC`, `glmnet`, `RSCUDO`, `pathfindR`, `illuminaHumanv3.db`, `AnnotationDbi`, `biomaRt`, `STRINGdb`, `ggplot2`, `ggfortify`.
+
+
+  
+<br>
+<br>
+
+
+4. **Know_Graph_Eng**
+   - ***Aim*** --> Build a Knowledge Graph (KG) on the transmission dynamics of the human microbiome across different populations, while considering social relationships and environmental contexts following the **iTelos** methodology. The KG organizes data on gut/oral bacterial species (SGBs), their phenotypic traits, transmission rates, and the individuals from which samples were collected, enabling structured queries for researchers, clinicians, and students in the microbiology field.
+   - ***Files***:
+     - `KGE_PROJECT-Phase IV.pdf` → Full project report documenting all four phases of the KGE pipeline: Purpose Definition (informal purpose, domain of interest, scenarios, personas, competency questions, ER model), Information Gathering (data sources, cleaning, standardization, finalized `.tsv` datasets), Language Definition (concept identification via UKC, D3O, GENO, OHMI ontologies; language resource table), and Knowledge Definition (ER/EER formalization, Teleontology creation and alignment via Protégé, finalized Teleology exported as `.rdf`).
+   - ***Outputs*** → ER/EER diagram (10 ETypes: Dataset, Sample, SGB, Taxonomy, Phenotype, Transmission, Person, Country, Sibling, Twin), Language Resource Table (concepts aligned to UKC, D3O, GENO, OHMI), finalized Teleology OWL/RDF file (`teleology_KGE24_QCB2.rdf` — 11 ETypes, 9 object properties, 32 data properties, 451 axioms).
+   - ***Languages*** → R, OWL/RDF.
+   - ***Resources/Tools*** → `curatedMetagenomicData` (R package), Protégé (ontology editor), Schema.org, Bioschemas.org, UKC (Universal Knowledge Core), NCBO BioPortal (D3O, GENO, OHMI ontologies), EnrichR (online).
+   - ***Authors*** → Andrea Policano, Roan Spadazzi, Vladyslav Husak — University of Trento, KnowDive Group (Dec 2024).
+  
+
+
+  
+<br>
+<br>
 
 
 ## Future Improvements ⏭️
