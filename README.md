@@ -95,7 +95,7 @@ Each repository holds one or multiple files related to a specific project for a 
    - ***Outputs*** → ODE/SDE model fits, parameter estimation results (bioavailability, σ), cross-validation scores, Metropolis-Hastings trace plots, gradient-based optimization convergence plots, AUC comparison against Robertson's reference study.
    - ***Languages*** → Python, Matlab.
    - ***Resources/Libraries*** → `numpy`, `scipy` (ODE solver, optimization), `matplotlib`, `pandas`.
-   - ***Authors*** → Andrea Policano, Huyen Pham.
+   - ***Authors*** → Andrea Policano, Huyen Pham - University of Trento(2025).
 
 
 <br>
